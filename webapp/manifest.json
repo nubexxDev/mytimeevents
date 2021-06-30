@@ -20,6 +20,13 @@
 				"settings": {
 					"localUri": "localService/metadata.xml"
 				}
+			},
+			"ZHCM_TIME_EVENTS_SRV": {
+				"uri": "/sap/opu/odata/sap/ZHCM_TIME_EVENTS_SRV/",
+				"type": "OData",
+				"settings": {
+					"localUri": "localService/ZHCM_TIME_EVENTS_SRV/metadata.xml"
+				}
 			}
 		}
 	},
@@ -73,7 +80,7 @@
 					"defaultBindingMode": "OneWay",
 					"defaultCountMode": "Request"
 				},
-				"dataSource": "ZHR_TIME_EVENTS_SRV",
+				"dataSource": "ZHCM_TIME_EVENTS_SRV",
 				"preload": true
 			}
 		},

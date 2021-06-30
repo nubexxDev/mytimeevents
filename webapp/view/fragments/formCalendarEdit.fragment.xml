@@ -12,15 +12,15 @@
 			<Label text="{i18n>formLabelDate}" labelFor="selectedDate"/>
 			<Text id="selectedDate" text="{i18n>noDateSelected}"/>
 			<Label text="{i18n>formLabelStartTime}" labelFor="startWorkingTP"/>
-			<TimePicker value="{ path: 'StartWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="startWorkingTP"
+			<TimePicker value="{ path: 'StartTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="startWorkingTP"
 				change="onChangeTime" valueFormat="HH:mm" mask="h9:59" displayFormat="HH:mm" placeholder="HH:mm"/>
 			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingTP"/>
-			<TimePicker value="{ path: 'EndWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="endWorkingTP"
+			<TimePicker value="{ path: 'EndTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="endWorkingTP"
 				change="onChangeTime" valueFormat="HH:mm" displayFormat="HH:mm" placeholder="HH:mm"/>
 			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
 			<Input id="workingHrsInput" enabled="false"/>
 			<Label text="{i18n>formLabelBreak}"/>
-			<CheckBox id="checkBreak" select="onChangeBreak" selected="{WorkingBreak}" text="{i18n>formTextBreak}"/>
+			<CheckBox id="checkBreak" select="onChangeBreak" selected="{BreakFlag}" text="{i18n>formTextBreak}"/>
 		</form:content>
 	</form:SimpleForm>
 </core:FragmentDefinition>

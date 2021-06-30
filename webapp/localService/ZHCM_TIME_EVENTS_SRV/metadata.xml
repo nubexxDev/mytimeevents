@@ -1,0 +1,42 @@
+<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"
+	xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData" Version="1.0">
+	<edmx:DataServices m:DataServiceVersion="2.0">
+		<Schema xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="ZHCM_TIME_EVENTS_SRV" xml:lang="en" sap:schema-version="1">
+			<EntityType Name="Calendar" sap:content-version="1">
+				<Key><PropertyRef Name="Pernr"/><PropertyRef Name="CalendarDate"/></Key><Property Name="Pernr" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Personnel No." sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="CalendarDate" Type="Edm.DateTime" Nullable="false" Precision="7" sap:unicode="false" sap:label="Date" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="CalendarMonth" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Period" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="CalendarYear" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Year" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="Status" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Calendar Day Status"
+					sap:creatable="false" sap:updatable="false" sap:sortable="false"/><Property Name="HolidayText" Type="Edm.String" Nullable="false" MaxLength="30" sap:unicode="false" sap:label="Holiday Text"
+					sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="MaintenanceStatus" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Time Event Maint Status"
+					sap:creatable="false" sap:updatable="false" sap:sortable="false"/></EntityType>
+			<EntityType Name="Event" sap:content-version="1">
+				<Key><PropertyRef Name="Pernr"/><PropertyRef Name="CalendarDate"/></Key><Property Name="Pernr" Type="Edm.String" Nullable="false" MaxLength="8" sap:unicode="false" sap:label="Personnel No." sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="CalendarDate" Type="Edm.DateTime" Nullable="false" Precision="7" sap:unicode="false" sap:label="Date" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false"/><Property Name="StartTime" Type="Edm.Time" Nullable="false" Precision="0" sap:unicode="false" sap:label="Start time" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="EndTime" Type="Edm.Time" Precision="0" sap:unicode="false" sap:label="End time" sap:creatable="false" sap:updatable="false"
+					sap:sortable="false" sap:filterable="false"/><Property Name="WorkingHours" Type="Edm.Decimal" Precision="5" Scale="2" sap:unicode="false" sap:label="Working Hours" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="BreakFlag" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="Break Flag" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="Avg24" Type="Edm.Decimal" Nullable="false" Precision="5" Scale="2" sap:unicode="false" sap:label="Avg Hrs 24 Wks"
+					sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="VisibleCreate" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="VisibleEdit" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="VisibleDelete" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="EnabledCreate" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="EnabledEdit" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/><Property Name="EnabledDelete" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false"
+					sap:updatable="false" sap:sortable="false" sap:filterable="false"/></EntityType>
+			<Association Name="CalendarEvent" sap:content-version="1"><End Type="ZHCM_TIME_EVENTS_SRV.Calendar" Multiplicity="*" Role="FromRole_CalendarEvent"/><End Type="ZHCM_TIME_EVENTS_SRV.Event" Multiplicity="1" Role="ToRole_CalendarEvent"/>
+				<ReferentialConstraint>
+					<Principal Role="FromRole_CalendarEvent"><PropertyRef Name="CalendarDate"/><PropertyRef Name="Pernr"/></Principal>
+					<Dependent Role="ToRole_CalendarEvent"><PropertyRef Name="CalendarDate"/><PropertyRef Name="Pernr"/></Dependent>
+				</ReferentialConstraint>
+			</Association>
+			<EntityContainer Name="ZHCM_TIME_EVENTS_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx"><EntitySet Name="CalendarSet" EntityType="ZHCM_TIME_EVENTS_SRV.Calendar" sap:creatable="false" sap:updatable="false" sap:deletable="false"
+				sap:pageable="false" sap:content-version="1"/><EntitySet Name="EventSet" EntityType="ZHCM_TIME_EVENTS_SRV.Event" sap:creatable="false" sap:updatable="false" sap:deletable="false"
+				sap:pageable="false" sap:content-version="1"/>
+				<AssociationSet Name="CalendarEventSet" Association="ZHCM_TIME_EVENTS_SRV.CalendarEvent" sap:creatable="false" sap:updatable="false"
+					sap:deletable="false" sap:content-version="1"><End EntitySet="CalendarSet" Role="FromRole_CalendarEvent"/><End EntitySet="EventSet" Role="ToRole_CalendarEvent"/></AssociationSet>
+			</EntityContainer><atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="self" href="./sap/ZHCM_TIME_EVENTS_SRV/$metadata"/><atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="latest-version" href="./sap/ZHCM_TIME_EVENTS_SRV/$metadata"/></Schema>
+	</edmx:DataServices>
+</edmx:Edmx>

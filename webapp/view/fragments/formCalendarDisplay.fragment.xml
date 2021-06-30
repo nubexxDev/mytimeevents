@@ -12,13 +12,13 @@
 			<Label text="{i18n>formLabelDate}" labelFor="selectedDate"/>
 			<Text id="selectedDateDisplay" text="{i18n>noDateSelected}"/>
 			<Label text="{i18n>formLabelStartTime}" labelFor="startWorkingDTI"/>
-			<Text id="startWorkingText"  text="{ path: 'StartWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
+			<Text id="startWorkingText"  text="{ path: 'StartTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
 			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingDTI"/>
-			<Text id="endWorkingText" text="{ path: 'EndWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
+			<Text id="endWorkingText" text="{ path: 'EndTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
 			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
 			<Text id="workingHrsText" />
 			<Label text="{i18n>formLabelBreak}"/>
-			<CheckBox id="checkBreakDisplay" select="onChangeBreak" selected="{WorkingBreak}" text="{i18n>formTextBreak}" enabled="false"/>
+			<CheckBox id="checkBreakDisplay" select="onChangeBreak" selected="{BreakFlag}" text="{i18n>formTextBreak}" enabled="false"/>
 		</form:content>
 	</form:SimpleForm>
 </core:FragmentDefinition>
