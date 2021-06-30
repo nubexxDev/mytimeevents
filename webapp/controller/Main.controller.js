@@ -9,9 +9,10 @@ sap.ui.define([
 	"../model/models",
 	"sap/ui/model/FilterOperator",
 	"sap/ui/model/odata/v2/ODataModel",
-	"sap/m/MessageToast"
+	"sap/m/MessageToast",
+	"sap/m/MessageBox"
 ], function (BaseController, JSONModel, formatter, DateTypeRange, DateFormat, coreLibrary, Filter, models, FilterOperator, ODataModel,
-	MessageToast) {
+	MessageToast, MessageBox) {
 	"use strict";
 
 	var CalendarType = coreLibrary.CalendarType;
@@ -354,6 +355,10 @@ sap.ui.define([
 		},
 
 		onPressDelete: function (oEvent) {
+			this.openDeleteMessageBox();
+		},
+		
+		deleteRecord: function (oEvent) {
 			var oModel = this.getView().getModel(),
 				oControlModel = this.getModel("controlModel"),
 				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
@@ -380,12 +385,6 @@ sap.ui.define([
 					MessageToast.show(this.getResourceBundle().getText("errorDeleteEvent"));
 				}.bind(this)
 			});
-
-			// this.getView().byId("createButton").setVisible(true);
-			// this.getView().byId("createButton").setEnabled(true);
-
-			// this.getView().byId("editButton").setVisible(false);
-			// this.getView().byId("deleteButton").setVisible(false);
 
 			oControlModel.setProperty("/isDisplayMode", true);
 			oControlModel.setProperty("/isEditMode", false);
@@ -467,6 +466,18 @@ sap.ui.define([
 
 			oControlModel.setProperty("/isDisplayMode", true);
 			oControlModel.setProperty("/isEditMode", false);
+		},
+		
+		openDeleteMessageBox: function (oEvent) {
+			MessageBox.warning(this.getResourceBundle().getText("deleteMessageBoxText"), {
+				actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+				emphasizedAction: MessageBox.Action.OK,
+				onClose: function (sAction) {
+					if (sAction === MessageBox.Action.OK) {
+						this.deleteRecord();
+					}	
+				}
+			});
 		}
 	});
 });
