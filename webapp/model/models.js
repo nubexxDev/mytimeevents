@@ -36,8 +36,11 @@ sap.ui.define([
 		
 		createControlModel : function () {
 			var oModel = new JSONModel({
-				Pernr: "",
-				NonWorkingDays: [] //Not working days comming from entity CalendarSet
+				"Pernr": "",
+				"isDisplayMode": true,
+				"isEditMode": false,
+				"isDateSelected": true,
+				"NonWorkingDays": [] //Not working days coming from entity CalendarSet
 			});
 			oModel.setDefaultBindingMode("OneWay");
 			return oModel;

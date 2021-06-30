@@ -1,25 +1,35 @@
 <mvc:View controllerName="hr.computacenter.mytimeevents.controller.Main" xmlns="sap.m" xmlns:mvc="sap.ui.core.mvc" xmlns:f="sap.f"
 	xmlns:form="sap.ui.layout.form" xmlns:u="sap.ui.unified" xmlns:l="sap.ui.layout" xmlns:w="sap.ui.integration.widgets"
-	xmlns:cssgrid="sap.ui.layout.cssgrid" displayBlock="true">
+	xmlns:cssgrid="sap.ui.layout.cssgrid" xmlns:core="sap.ui.core" displayBlock="true">
 	<App>
 		<pages>
 			<Page >
 				<content>
 					<Page class="sapUiResponsiveContentPadding">
 						<headerContent>
-							<Button text="{i18n>buttonCreateText}" tooltip="{i18n>buttonCreateText}" type="Emphasized" press="onPressCreate"
+							<!--			<Button text="{i18n>buttonCreateText}" tooltip="{i18n>buttonCreateText}" type="Emphasized" press="onPressCreate"
 								visible="{= ${VisibleCreate} ? ${VisibleCreate} : false }" enabled="{ parts: [ { path: 'EnabledCreate'}, { path: 'StartWorking' }, { path: 'EndWorking' } ], formatter : '.validateButton' }"/>
-							<Button text="{i18n>buttonEditText}" tooltip="{i18n>buttonEditText}" press="onPressEdit"
+			-->
+							<!--<Button id="createButton" text="{i18n>buttonCreateText}" tooltip="{i18n>buttonCreateText}" type="Emphasized" press="onPressCreate"-->
+							<!--	visible="{= ${VisibleCreate} ? ${VisibleCreate} : false  &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true}" enabled="{= ${EnabledCreate} ? ${EnabledCreate} : false }"/>-->
+							<Button id="createButton" text="{i18n>buttonCreateText}" tooltip="{i18n>buttonCreateText}" type="Emphasized" press="onPressCreate"
+								visible="{= ${VisibleCreate} === true &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true}"
+								enabled="{= ${EnabledCreate} ? ${EnabledCreate} : false }"/>
+								
+							<!--		<Button text="{i18n>buttonEditText}" tooltip="{i18n>buttonEditText}" press="onPressEdit"
 								visible="{= ${VisibleEdit} ? ${VisibleEdit} : false }" enabled="{ parts: [ { path: 'EnabledEdit'}, { path: 'StartWorking' }, { path: 'EndWorking' } ], formatter : '.validateButton' }"/>
-							<Button text="{i18n>buttonDeleteText}" tooltip="{i18n>buttonDeleteText}" press="onPressDelete"
-								visible="{= ${VisibleDelete} ? ${VisibleDelete} : false }" enabled="{EnabledDelete}"/>
+			-->
+							<Button id="editButton" text="{i18n>buttonEditText}" tooltip="{i18n>buttonEditText}" press="onPressEdit"
+								visible="{= ${VisibleEdit} === true &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true }" enabled="{= ${EnabledEdit} ? ${EnabledEdit} : false }"/>
+							<Button id="deleteButton" text="{i18n>buttonDeleteText}" tooltip="{i18n>buttonDeleteText}" press="onPressDelete"
+								visible="{= ${VisibleDelete} === true &amp;&amp; ${controlModel>/isDateSelected} === true }" enabled="{= ${EnabledDelete} ? ${EnabledDelete} : false }"/>
 						</headerContent>
 						<content>
 							<l:VerticalLayout width="100%" class="gridWrapper">
 								<l:Grid containerQuery="true" defaultSpan="XL4 L6 M8">
 									<VBox>
-										<u:Calendar id="timeCalendar" width="80%" firstDayOfWeek="1" nonWorkingDays="{control>/NonWorkingDays}" select="onSelectDay" startDateChange="onChangeMonth"
-											legend="calendarLegend"/>
+										<u:Calendar id="timeCalendar" width="80%" firstDayOfWeek="1" nonWorkingDays="{control>/NonWorkingDays}" select="onSelectDay"
+											startDateChange="onChangeMonth" legend="calendarLegend"/>
 										<VBox width="80%">
 											<u:CalendarLegend id="calendarLegend">
 												<u:items>
@@ -30,35 +40,23 @@
 										</VBox>
 									</VBox>
 									<VBox>
-										<form:SimpleForm id="formCalendar" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4"
-											labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1"
-											singleContainerFullSize="false" ariaLabelledBy="Title1">
-											<form:toolbar>
-												<Toolbar id="TB1">
-													<Title id="Title1" text="{i18n>formTitle}"/>
-													<ToolbarSpacer/>
-												</Toolbar>
-											</form:toolbar>
-											<form:content>
-												<Label text="{i18n>formLabelDate}" labelFor="selectedDate"/>
-												<Text id="selectedDate" text="{i18n>noDateSelected}"/>
-												<Label text="{i18n>formLabelStartTime}" labelFor="startWorkingDTI"/>
-												<TimePicker value="{ path: 'StartWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="startWorkingTP"
-													change="onChangeTime" valueFormat="HH:mm" mask="h9:59" displayFormat="HH:mm" placeholder="HH:mm"/>
-												<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingDTI"/>
-												<TimePicker value="{ path: 'EndWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="endWorkingTP"
-													change="onChangeTime" valueFormat="HH:mm" displayFormat="HH:mm" placeholder="HH:mm"/>
-												<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
-												<Input id="workingHrsInput" enabled="false"/>
-												<Label text="{i18n>formLabelBreak}"/>
-												<CheckBox id="checkBreak" select="onChangeBreak" selected="{WorkingBreak}" text="{i18n>formTextBreak}"/>
-											</form:content>
-										</form:SimpleForm>
+										<core:Fragment fragmentName="hr.computacenter.mytimeevents.view.fragments.formCalendarEdit" type="XML"/>
+										<core:Fragment fragmentName="hr.computacenter.mytimeevents.view.fragments.formCalendarDisplay" type="XML"/>
 									</VBox>
 								</l:Grid>
 							</l:VerticalLayout>
 						</content>
-						<footer></footer>
+						<footer>
+							<OverflowToolbar id="footerActionButtons" visible="{= !${controlModel>/isDisplayMode}}">
+								<ToolbarSpacer/>
+								<Button type="Accept" text="{i18n>buttonSaveText}" press="onPressSave">
+									<layoutData><OverflowToolbarLayoutData priority="NeverOverflow"/></layoutData>
+								</Button>
+								<Button type="Reject" text="{i18n>buttonCancelText}" press="onPressCancel">
+									<layoutData><OverflowToolbarLayoutData priority="NeverOverflow"/></layoutData>
+								</Button>
+							</OverflowToolbar>
+						</footer>
 					</Page>
 				</content>
 			</Page>

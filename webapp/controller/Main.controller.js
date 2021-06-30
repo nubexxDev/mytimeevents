@@ -19,7 +19,7 @@ sap.ui.define([
 	return BaseController.extend("hr.computacenter.mytimeevents.controller.Main", {
 		oFormatYyyymmdd: null,
 		formatter: formatter,
-		
+
 		/* =========================================================== */
 		/* Lifecycle methods                                           */
 		/* =========================================================== */
@@ -30,9 +30,6 @@ sap.ui.define([
 		 */
 		onInit: function () {
 
-			// Set control model
-			this.setModel(models.createControlModel(), "control");
-
 			this.getView().setBusy(true);
 
 			this.oFormatYyyymmdd = DateFormat.getInstance({
@@ -41,9 +38,8 @@ sap.ui.define([
 			});
 
 			this.getCalendar(true);
-
 		},
-		
+
 		/* =========================================================== */
 		/* Methods                                          		   */
 		/* =========================================================== */
@@ -51,15 +47,15 @@ sap.ui.define([
 		bindView: function (oCalendarDate) {
 			var oUTCCalendarDate = this.getUTCDate(oCalendarDate);
 			var oEventModel = this.getOwnerComponent().getModel();
-			var oControlModel = this.getModel("control");
+			var oControlModel = this.getModel("controlModel");
 
 			var sPath = "/" + oEventModel.createKey("EventSet", {
 				Pernr: oControlModel.getProperty("/Pernr"),
 				CalendarDate: oUTCCalendarDate
 			});
-			
+
 			this.resetView();
-			
+
 			this.getView().bindElement({
 				path: sPath,
 				events: {
@@ -82,8 +78,7 @@ sap.ui.define([
 				oStartDate = oCalendar.getStartDate(),
 				calendarMonth = oStartDate.getMonth() + 1,
 				calendarYear = oStartDate.getFullYear(),
-				oModel = this.getOwnerComponent().getModel(),
-				oControlModel = this.getModel("control");
+				oModel = this.getOwnerComponent().getModel();
 
 			oCalendar.removeAllSpecialDates();
 			this.getView().setBusy(true);
@@ -97,7 +92,7 @@ sap.ui.define([
 					],
 					success: function (oData) {
 						if (oData.results && oData.results.length > 0) {
-							oControlModel.setProperty("/Pernr", oData.results[0].Pernr);
+							this.getModel("controlModel").setProperty("/Pernr", oData.results[0].Pernr);
 
 							var oCalendarModel = new sap.ui.model.json.JSONModel(oData.results);
 							this.getView().setModel(oCalendarModel, "CalendarModel");
@@ -133,26 +128,26 @@ sap.ui.define([
 				sColor = null;
 				sType = null;
 				switch (aCalendarDates[i].Status) {
-					case "06" || "08":
-						sTooltyp = "Backend Text";
-						sColor = "#1cb048";
-						break;
-	
-					case "07" || "09":
-						sTooltyp = "Error";
-						sColor = "#ff7e29";
-						break;
-	
-					case "04": //Working Days
-						continue;
-	
-					case "05": //Not Working Days
-						sTooltyp = "";
-						sType = "NonWorking";
-						break;
-	
-					default:
-						break;
+				case "06" || "08":
+					sTooltyp = "Backend Text";
+					sColor = "#1cb048";
+					break;
+
+				case "07" || "09":
+					sTooltyp = "Error";
+					sColor = "#ff7e29";
+					break;
+
+				case "04": //Working Days
+					continue;
+
+				case "05": //Not Working Days
+					sTooltyp = "";
+					sType = "NonWorking";
+					break;
+
+				default:
+					break;
 				}
 
 				oCal1.addSpecialDate(new DateTypeRange({
@@ -161,7 +156,7 @@ sap.ui.define([
 					type: sType,
 					tooltip: sTooltyp
 				}));
-				
+
 				// oCal1.addSpecialDate(new DateTypeRange({
 				// 	startDate: new Date(aCalendarDates[i].CalendarDate),
 				// 	type: "NonWorking",
@@ -172,7 +167,16 @@ sap.ui.define([
 		},
 
 		updateSelectedDayText: function (oSelectedDay) {
-			var oText = this.byId("selectedDate");
+			var oText;
+			var oControlModel = this.getModel("controlModel");
+			var isDisplayMode = oControlModel.getProperty("/isDisplayMode");
+
+			if (isDisplayMode) {
+				oText = this.byId("selectedDateDisplay");
+			} else {
+				oText = this.byId("selectedDate");
+			}
+
 			if (oSelectedDay) {
 				oText.setText(this.oFormatYyyymmdd.format(oSelectedDay.getStartDate()));
 				return;
@@ -181,10 +185,18 @@ sap.ui.define([
 		},
 
 		resetView: function () {
-			this.getView().getModel().resetChanges();
-			this.getView().unbindElement();
-			this.byId("workingHrsInput").setValue("");
-			this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
+			// this.getView().getModel().resetChanges();
+			// this.getView().unbindElement();
+
+			var oControlModel = this.getModel("controlModel");
+			var isDisplayMode = oControlModel.getProperty("/isDisplayMode");
+
+			if (!isDisplayMode) {
+				// 	this.byId("workingHrsText").setText("");
+				// } else {
+				// 	this.byId("workingHrsInput").setValue("");
+				this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
+			}
 		},
 
 		getUTCDate: function (oDate) {
@@ -192,56 +204,74 @@ sap.ui.define([
 		},
 
 		adjustBreak: function () {
-			var oStartWorking = this.byId("startWorkingTP"),
-				oEndWorking = this.byId("endWorkingTP"),
-				dInitialTime = new Date(),
-				dEndTime = new Date();
+			var dInitialTime = new Date(),
+				dEndTime = new Date(),
+				aStartTime,
+				aEndTime;
 
-			if (oStartWorking.getValue() && oEndWorking.getValue()) {
-				var aStartTime = oStartWorking.getValue().split(":"),
+			var oControlModel = this.getModel("controlModel");
+			var isDisplayMode = oControlModel.getProperty("/isDisplayMode");
+
+			if (isDisplayMode) {
+				var oStartWorkingTxt = this.byId("startWorkingText"),
+					oEndWorkingTxt = this.byId("endWorkingText");
+
+				aStartTime = oStartWorkingTxt.getText().split(":");
+				aEndTime = oEndWorkingTxt.getText().split(":");
+			} else {
+				var oStartWorking = this.byId("startWorkingTP"),
+					oEndWorking = this.byId("endWorkingTP");
+
+				if (oStartWorking.getValue() && oEndWorking.getValue()) {
+					aStartTime = oStartWorking.getValue().split(":");
 					aEndTime = oEndWorking.getValue().split(":");
-
-				dInitialTime.setHours(aStartTime[0], aStartTime[1], "00");
-				dEndTime.setHours(aEndTime[0], aEndTime[1], "00");
-
-				var iHours = dEndTime.getHours() - dInitialTime.getHours(),
-					iMinutes = dEndTime.getMinutes() - dInitialTime.getMinutes();
-					
-				if (iHours < 0) return;
-
-				var oCheckBreak = this.byId("checkBreak");
-				if (oCheckBreak.getSelected() === true && iHours > 0) {
-					iHours--;
 				}
-
-				if (iMinutes < 0 && iHours > 0) {
-					iHours--;
-				}
-				var oWorkingHours = this.byId("workingHrsInput");
-				oWorkingHours.setValue(iHours);
 			}
+
+			dInitialTime.setHours(aStartTime[0], aStartTime[1], "00");
+			dEndTime.setHours(aEndTime[0], aEndTime[1], "00");
+
+			var iHours = dEndTime.getHours() - dInitialTime.getHours(),
+				iMinutes = dEndTime.getMinutes() - dInitialTime.getMinutes();
+
+			if (iHours < 0) return;
+
+			var oCheckBreak = this.byId("checkBreak");
+			if (oCheckBreak.getSelected() === true && iHours > 0) {
+				iHours--;
+			}
+
+			if (iMinutes < 0 && iHours > 0) {
+				iHours--;
+			}
+
+			var oWorkingHoursTxt = this.byId("workingHrsText"),
+				oWorkingHours = this.byId("workingHrsInput");
+
+			oWorkingHoursTxt.setText(iHours);
+			oWorkingHours.setValue(iHours);
 		},
-		
+
 		/* =========================================================== */
 		/* Validations/Formatter		                               */
 		/* =========================================================== */
-		
-		validateButton: function(bEnabled, oStartTime) {
-			if(!bEnabled || !this.validateTimes()) {
+
+		validateButton: function (bEnabled, oStartTime) {
+			if (!bEnabled || !this.validateTimes()) {
 				return false;
 			}
-			
+
 			return true;
 		},
-		
-		validateTimes: function() {
+
+		validateTimes: function () {
 			var oStartTime = this.byId("startWorkingTP").getDateValue(),
 				oEndTime = this.byId("endWorkingTP").getDateValue();
-				
-			if(oStartTime.valueOf() >= oEndTime.valueOf()) {
+
+			if (oStartTime.valueOf() >= oEndTime.valueOf()) {
 				return false;
 			}
-			
+
 			return true;
 		},
 
@@ -252,16 +282,22 @@ sap.ui.define([
 		onSelectDay: function (oEvent) {
 			var oCalendar = oEvent.getSource(),
 				oSelectedDate = oCalendar.getSelectedDates()[0],
-				oStartDate = oSelectedDate.getStartDate();
+				oStartDate = oSelectedDate.getStartDate(),
+				oControlModel = this.getModel("controlModel");
+
 			if (this.oLastSelectedJSDate && oStartDate.getTime() === this.oLastSelectedJSDate.getTime()) {
 				oCalendar.removeSelectedDate(oSelectedDate);
 				this.oLastSelectedJSDate = null;
 				this.resetView();
+				oControlModel.setProperty("/isDateSelected", false);
 			} else {
+				oControlModel.setProperty("/isDateSelected", true);
 				this.oLastSelectedJSDate = oStartDate;
-
 				this.bindView(oStartDate);
+				
 			}
+			oControlModel.setProperty("/isDisplayMode", true);
+
 			this.updateSelectedDayText(oCalendar.getSelectedDates()[0]);
 		},
 
@@ -269,7 +305,7 @@ sap.ui.define([
 			var oStartWorking = this.byId("startWorkingTP"),
 				oEndWorking = this.byId("endWorkingTP");
 
-			if(!this.validateTimes()) {
+			if (!this.validateTimes()) {
 				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
 				oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
 			} else {
@@ -277,7 +313,7 @@ sap.ui.define([
 			}
 
 			this.adjustBreak();
-			
+
 			if (this.getView().getBindingContext()) {
 				var oUTCStartWorking = this.getUTCDate(oStartWorking.getDateValue());
 				var oUTCEndWorking = this.getUTCDate(oEndWorking.getDateValue());
@@ -292,72 +328,34 @@ sap.ui.define([
 
 		onChangeBreak: function (oEvent) {
 			this.adjustBreak();
-			
+
 			if (this.getView().getBindingContext()) {
 				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/WorkingBreak", oEvent.getSource().getSelected());
 			}
 		},
 
 		onPressCreate: function (oEvent) {
-			var oModel = this.getOwnerComponent().getModel(),
-				oControlModel = this.getModel("control"),
-				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
+			var oControlModel = this.getModel("controlModel");
 
-			var timeFormat = sap.ui.core.format.DateFormat.getTimeInstance({
-				source: {
-					pattern: "HH:mm:ss"
-				},
-				pattern: "PTHH'H'mm'M'ss'S'"
-			});
+			this.getView().byId("titleEdit").setText(this.getResourceBundle().getText("formTitleCreate"));
 
-			var oEntry = {
-				Pernr: oControlModel.getProperty("/Pernr"),
-				CalendarDate: this.getUTCDate(oSelectedDate),
-				StartWorking: timeFormat.format(this.getView().byId("startWorkingTP").getDateValue()),
-				EndWorking: timeFormat.format(this.getView().byId("endWorkingTP").getDateValue()),
-				WorkingBreak: this.getView().byId("checkBreak").getSelected()
-			};
-
-			this.getView().setBusy(true);
-
-			oModel.create("/EventSet", oEntry, {
-				success: function (data, response) {
-					this.getView().setBusy(false);
-					MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
-					oModel.refresh();
-					this.getCalendar();
-				}.bind(this),
-				error: function (error) {
-					this.getView().setBusy(false);
-					MessageToast.show(this.getResourceBundle().getText("errorCreateEvent"));
-				}.bind(this)
-			});
-
+			oControlModel.setProperty("/isDisplayMode", false);
+			this.getView().byId("createButton").setVisible(false);
+			this.updateSelectedDayText(this.getView().byId("timeCalendar").getSelectedDates()[0]);
 		},
 
 		onPressEdit: function (oEvent) {
-			var oModel = this.getView().getModel();
+			var oControlModel = this.getModel("controlModel");
 
-			if (oModel.hasPendingChanges()) {
-				this.getView().setBusy(true);
-				oModel.submitChanges({
-					success: function (data) {
-						oModel.refresh();
-						this.getView().setBusy(false);
-						MessageToast.show(this.getResourceBundle().getText("successUpadteEvent"));
-						this.getCalendar();
-					}.bind(this),
-					error: function (error) {
-						this.getView().setBusy(false);
-						MessageToast.show(this.getResourceBundle().getText("errorUpdateEvent"));
-					}.bind(this)
-				});
-			}
+			this.getView().byId("titleEdit").setText(this.getResourceBundle().getText("formTitleEdit"));
+			oControlModel.setProperty("/isEditMode", true);
+			oControlModel.setProperty("/isDisplayMode", false);
+			this.updateSelectedDayText(this.getView().byId("timeCalendar").getSelectedDates()[0]);
 		},
 
 		onPressDelete: function (oEvent) {
 			var oModel = this.getView().getModel(),
-				oControlModel = this.getModel("control"),
+				oControlModel = this.getModel("controlModel"),
 				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
 
 			var oUTCSelectedDate = this.getUTCDate(oSelectedDate);
@@ -366,7 +364,7 @@ sap.ui.define([
 				Pernr: oControlModel.getProperty("/Pernr"),
 				CalendarDate: oUTCSelectedDate
 			});
-			
+
 			this.getView().setBusy(true);
 
 			oModel.remove(sPath, {
@@ -383,6 +381,92 @@ sap.ui.define([
 				}.bind(this)
 			});
 
+			// this.getView().byId("createButton").setVisible(true);
+			// this.getView().byId("createButton").setEnabled(true);
+
+			// this.getView().byId("editButton").setVisible(false);
+			// this.getView().byId("deleteButton").setVisible(false);
+
+			oControlModel.setProperty("/isDisplayMode", true);
+			oControlModel.setProperty("/isEditMode", false);
+
+			this.getView().byId("workingHrsInput").setValue(0);
+			this.getView().byId("workingHrsText").setText("0");
+		},
+
+		onPressSave: function (oEvent) {
+			var oModel = this.getOwnerComponent().getModel(),
+				oControlModel = this.getModel("controlModel"),
+				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
+
+			var isEditMode = oControlModel.getProperty("/isEditMode");
+
+			if (isEditMode) {
+				if (oModel.hasPendingChanges()) {
+					this.getView().setBusy(true);
+					oModel.submitChanges({
+						success: function (data) {
+							oModel.refresh();
+							this.getView().setBusy(false);
+							MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
+							this.getCalendar();
+						}.bind(this),
+						error: function (error) {
+							this.getView().setBusy(false);
+							MessageToast.show(this.getResourceBundle().getText("errorUpdateEvent"));
+						}.bind(this)
+					});
+				}
+
+				oControlModel.setProperty("/isEditMode", false);
+			} else {
+				var timeFormat = sap.ui.core.format.DateFormat.getTimeInstance({
+					source: {
+						pattern: "HH:mm:ss"
+					},
+					pattern: "PTHH'H'mm'M'ss'S'"
+				});
+
+				var oEntry = {
+					Pernr: oControlModel.getProperty("/Pernr"),
+					CalendarDate: this.getUTCDate(oSelectedDate),
+					StartWorking: timeFormat.format(this.getView().byId("startWorkingTP").getDateValue()),
+					EndWorking: timeFormat.format(this.getView().byId("endWorkingTP").getDateValue()),
+					WorkingBreak: this.getView().byId("checkBreak").getSelected()
+				};
+
+				this.getView().setBusy(true);
+
+				oModel.create("/EventSet", oEntry, {
+					success: function (data, response) {
+						this.getView().setBusy(false);
+						MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
+						oModel.refresh();
+						this.getCalendar();
+					}.bind(this),
+					error: function (error) {
+						this.getView().setBusy(false);
+						MessageToast.show(this.getResourceBundle().getText("errorCreateEvent"));
+					}.bind(this)
+				});
+			}
+
+			this.bindView(oSelectedDate);
+			this.adjustBreak();
+			oControlModel.setProperty("/isDisplayMode", true);
+		},
+
+		onPressCancel: function (oEvent) {
+			var oCalendar = this.getView().byId("timeCalendar"),
+				oSelectedDate = oCalendar.getSelectedDates()[0],
+				oStartDate = oSelectedDate.getStartDate(),
+				oControlModel = this.getModel("controlModel");
+
+			this.oLastSelectedJSDate = oStartDate;
+			this.bindView(oStartDate);
+
+			oControlModel.setProperty("/isDisplayMode", true);
+			oControlModel.setProperty("/isEditMode", false);
 		}
 	});
 });

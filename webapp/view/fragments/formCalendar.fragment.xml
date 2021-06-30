@@ -1,0 +1,28 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:form="sap.ui.layout.form">
+	<form:SimpleForm id="formCalendar" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4"
+		labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1"
+		singleContainerFullSize="false" ariaLabelledBy="Title1">
+		<form:toolbar>
+			<Toolbar id="TB1">
+				<Title id="Title1" text="{i18n>formTitle}"/>
+				<ToolbarSpacer/>
+			</Toolbar>
+		</form:toolbar>
+		<form:content>
+			<Label text="{i18n>formLabelDate}" labelFor="selectedDate"/>
+			<Text id="selectedDate" text="{i18n>noDateSelected}"/>
+			<Label text="{i18n>formLabelStartTime}" labelFor="startWorkingDTI"/>
+			<TimePicker value="{ path: 'StartWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="startWorkingTP"
+				change="onChangeTime" valueFormat="HH:mm" mask="h9:59" displayFormat="HH:mm" placeholder="HH:mm"/>
+			<Text id="startWorkingText" />
+			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingDTI"/>
+			<TimePicker value="{ path: 'EndWorking', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="endWorkingTP"
+				change="onChangeTime" valueFormat="HH:mm" displayFormat="HH:mm" placeholder="HH:mm"/>
+			<Text id="endWorkingText" />
+			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
+			<Text id="workingHrsText" />
+			<Label text="{i18n>formLabelBreak}"/>
+			<CheckBox id="checkBreak" select="onChangeBreak" selected="{WorkingBreak}" text="{i18n>formTextBreak}"/>
+		</form:content>
+	</form:SimpleForm>
+</core:FragmentDefinition>
