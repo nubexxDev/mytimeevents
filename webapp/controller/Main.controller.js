@@ -10,9 +10,10 @@ sap.ui.define([
 	"sap/ui/model/FilterOperator",
 	"sap/ui/model/odata/v2/ODataModel",
 	"sap/m/MessageToast",
-	"sap/m/MessageBox"
+	"sap/m/MessageBox",
+	"sap/ui/core/Core"
 ], function (BaseController, JSONModel, formatter, DateTypeRange, DateFormat, coreLibrary, Filter, models, FilterOperator, ODataModel,
-	MessageToast, MessageBox) {
+	MessageToast, MessageBox, Core) {
 	"use strict";
 
 	var CalendarType = coreLibrary.CalendarType;
@@ -39,11 +40,90 @@ sap.ui.define([
 			});
 
 			this.getCalendar(true);
+			
+			this._MessageManager = Core.getMessageManager();
+			
+			this._oMessagePopover = sap.ui.xmlfragment("hr.computacenter.mytimeevents.view.fragments.messageDialog", this);
+			this.getView().addDependent(this._oMessagePopover);
 		},
 
 		/* =========================================================== */
 		/* Methods                                          		   */
 		/* =========================================================== */
+		// Display the button type according to the message with the highest severity
+		// The priority of the message types are as follows: Error > Warning > Success > Info
+		buttonTypeFormatter: function () {
+			var sHighestSeverity;
+			var aMessages = this._MessageManager.getMessageModel().oData;
+			aMessages.forEach(function (sMessage) {
+				switch (sMessage.type) {
+					case "Error":
+						sHighestSeverity = "Negative";
+						break;
+					case "Warning":
+						sHighestSeverity = sHighestSeverity !== "Negative" ? "Critical" : sHighestSeverity;
+						break;
+					case "Success":
+						sHighestSeverity = sHighestSeverity !== "Negative" && sHighestSeverity !== "Critical" ?  "Success" : sHighestSeverity;
+						break;
+					default:
+						sHighestSeverity = !sHighestSeverity ? "Neutral" : sHighestSeverity;
+						break;
+				}
+			});
+
+			return sHighestSeverity;
+		},
+
+		// Display the number of messages with the highest severity
+		highestSeverityMessages: function () {
+			var sHighestSeverityIconType = this.buttonTypeFormatter();
+			var sHighestSeverityMessageType;
+
+			switch (sHighestSeverityIconType) {
+				case "Negative":
+					sHighestSeverityMessageType = "Error";
+					break;
+				case "Critical":
+					sHighestSeverityMessageType = "Warning";
+					break;
+				case "Success":
+					sHighestSeverityMessageType = "Success";
+					break;
+				default:
+					sHighestSeverityMessageType = !sHighestSeverityMessageType ? "Information" : sHighestSeverityMessageType;
+					break;
+			}
+
+			return this._MessageManager.getMessageModel().oData.reduce(function(iNumberOfMessages, oMessageItem) {
+				return oMessageItem.type === sHighestSeverityMessageType ? ++iNumberOfMessages : iNumberOfMessages;
+			}, 0) || "";
+		},
+
+		// Set the button icon according to the message with the highest severity
+		buttonIconFormatter: function () {
+			var sIcon;
+			var aMessages = this._MessageManager.getMessageModel().oData;
+
+			aMessages.forEach(function (sMessage) {
+				switch (sMessage.type) {
+					case "Error":
+						sIcon = "sap-icon://message-error";
+						break;
+					case "Warning":
+						sIcon = sIcon !== "sap-icon://message-error" ? "sap-icon://message-warning" : sIcon;
+						break;
+					case "Success":
+						sIcon = "sap-icon://message-error" && sIcon !== "sap-icon://message-warning" ? "sap-icon://message-success" : sIcon;
+						break;
+					default:
+						sIcon = !sIcon ? "sap-icon://message-information" : sIcon;
+						break;
+				}
+			});
+
+			return sIcon;
+		},
 
 		bindView: function (oCalendarDate) {
 			var oUTCCalendarDate = this.getUTCDate(oCalendarDate);
@@ -85,6 +165,7 @@ sap.ui.define([
 			this.getView().setBusy(true);
 
 			oModel.metadataLoaded().then(function () {
+				sap.ui.getCore().getMessageManager().removeAllMessages();
 				oModel.read("/CalendarSet", {
 					filters: [
 						// new Filter("Pernr", ""), 
@@ -128,41 +209,41 @@ sap.ui.define([
 			for (var i = 0; i < aCalendarDates.length; i++) {
 				sColor = null;
 				sType = null;
-				switch (aCalendarDates[i].Status) {
-				case "06" || "08":
-					sTooltyp = "Backend Text";
-					sColor = "#1cb048";
+				switch (aCalendarDates[i].MaintenanceStatus) {
+				case "C":
+					sTooltyp = aCalendarDates[i].HolidayText;
+					sColor = "#1cb048"; //Green
+					sType = sap.ui.unified.CalendarDayType.Type03;
 					break;
-
-				case "07" || "09":
-					sTooltyp = "Error";
-					sColor = "#ff7e29";
+				case "D":
+					sTooltyp = aCalendarDates[i].HolidayText;
+					sColor = "#ff7e29"; //Orange
+					sType = sap.ui.unified.CalendarDayType.Type02;
 					break;
-
-				case "04": //Working Days
-					continue;
-
-				case "05": //Not Working Days
-					sTooltyp = "";
-					sType = "NonWorking";
+				case "I":
+					//continue;
 					break;
-
 				default:
 					break;
 				}
 
-				oCal1.addSpecialDate(new DateTypeRange({
-					startDate: new Date(aCalendarDates[i].CalendarDate),
-					color: sColor,
-					type: sType,
-					tooltip: sTooltyp
-				}));
+				if (sColor !== null) {
+					oCal1.addSpecialDate(new DateTypeRange({
+						startDate: new Date(aCalendarDates[i].CalendarDate),
+						color: sColor,
+						type: sType,
+						tooltip: sTooltyp
+					}));
+				}
 
-				// oCal1.addSpecialDate(new DateTypeRange({
-				// 	startDate: new Date(aCalendarDates[i].CalendarDate),
-				// 	type: "NonWorking",
-				// 	tooltip: sTooltyp
-				// }));
+				if (aCalendarDates[i].Status === "05") {
+					oCal1.addSpecialDate(new DateTypeRange({
+						startDate: new Date(aCalendarDates[i].CalendarDate),
+						type: "NonWorking",
+						sColor: "#dedede",
+						tooltip: "Dummy" //aCalendarDates[i].HolidayText
+					}));
+				}
 
 			}
 		},
@@ -201,7 +282,9 @@ sap.ui.define([
 		},
 
 		getUTCDate: function (oDate) {
-			return new Date(oDate.getTime() + oDate.getTimezoneOffset() * (-60000));
+			if (oDate && oDate.getTime()) {
+				return new Date(oDate.getTime() + oDate.getTimezoneOffset() * (-60000));
+			}
 		},
 
 		adjustBreak: function () {
@@ -269,9 +352,9 @@ sap.ui.define([
 			var oStartTime = this.byId("startWorkingTP").getDateValue(),
 				oEndTime = this.byId("endWorkingTP").getDateValue();
 
-			if (oStartTime.valueOf() >= oEndTime.valueOf()) {
-				return false;
-			}
+			// if (oStartTime.valueOf() >= oEndTime.valueOf()) {
+			// 	return false;
+			// }
 
 			return true;
 		},
@@ -295,7 +378,7 @@ sap.ui.define([
 				oControlModel.setProperty("/isDateSelected", true);
 				this.oLastSelectedJSDate = oStartDate;
 				this.bindView(oStartDate);
-				
+
 			}
 			oControlModel.setProperty("/isDisplayMode", true);
 
@@ -316,10 +399,19 @@ sap.ui.define([
 			this.adjustBreak();
 
 			if (this.getView().getBindingContext()) {
+
 				var oUTCStartWorking = this.getUTCDate(oStartWorking.getDateValue());
 				var oUTCEndWorking = this.getUTCDate(oEndWorking.getDateValue());
-				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/StartWorking/ms", oUTCStartWorking.getTime());
-				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndWorking/ms", oUTCEndWorking.getTime());
+				if (oUTCStartWorking) {
+					this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/StartTime/ms", oUTCStartWorking.getTime());
+				} else {
+					this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/StartTime/ms", 0);
+				}
+				if (oUTCEndWorking) {
+					this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndTime/ms", oUTCEndWorking.getTime());
+				} else {
+					this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndTime/ms", 0);
+				}
 			}
 		},
 
@@ -331,8 +423,12 @@ sap.ui.define([
 			this.adjustBreak();
 
 			if (this.getView().getBindingContext()) {
-				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/WorkingBreak", oEvent.getSource().getSelected());
+				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/BreakFlag", oEvent.getSource().getSelected());
 			}
+		},
+		
+		onOpenMessagePopover: function(oEvent) {
+			this._oMessagePopover.openBy(oEvent.getSource());
 		},
 
 		onPressCreate: function (oEvent) {
@@ -357,8 +453,8 @@ sap.ui.define([
 		onPressDelete: function (oEvent) {
 			this.openDeleteMessageBox();
 		},
-		
-		deleteRecord: function (oEvent) {
+
+		deleteRecord: function () {
 			var oModel = this.getView().getModel(),
 				oControlModel = this.getModel("controlModel"),
 				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
@@ -379,6 +475,11 @@ sap.ui.define([
 					this.getView().setBusy(false);
 					MessageToast.show(this.getResourceBundle().getText("successDeleteEvent"));
 					this.getCalendar();
+					oControlModel.setProperty("/isDisplayMode", true);
+					oControlModel.setProperty("/isEditMode", false);
+
+					this.getView().byId("workingHrsInput").setValue(0);
+					this.getView().byId("workingHrsText").setText("0");
 				}.bind(this),
 				error: function (error) {
 					this.getView().setBusy(false);
@@ -386,23 +487,27 @@ sap.ui.define([
 				}.bind(this)
 			});
 
-			oControlModel.setProperty("/isDisplayMode", true);
-			oControlModel.setProperty("/isEditMode", false);
-
-			this.getView().byId("workingHrsInput").setValue(0);
-			this.getView().byId("workingHrsText").setText("0");
 		},
 
 		onPressSave: function (oEvent) {
 			var oModel = this.getOwnerComponent().getModel(),
+				oStartWorking = this.byId("startWorkingTP"),
+				oEndWorking = this.byId("endWorkingTP"),
 				oControlModel = this.getModel("controlModel"),
 				oSelectedDate = this.getView().byId("timeCalendar").getSelectedDates()[0].getStartDate();
 
-			var isEditMode = oControlModel.getProperty("/isEditMode");
+			if (!oStartWorking.getValue()) {
+				oStartWorking.setValue("00:00");
+			}
+			if (!oEndWorking.getValue()) {
+				oEndWorking.setValue("00:00");
+			}
 
+			var isEditMode = oControlModel.getProperty("/isEditMode");
 			if (isEditMode) {
 				if (oModel.hasPendingChanges()) {
 					this.getView().setBusy(true);
+					sap.ui.getCore().getMessageManager().removeAllMessages();
 					oModel.submitChanges({
 						success: function (data) {
 							oModel.refresh();
@@ -429,13 +534,14 @@ sap.ui.define([
 				var oEntry = {
 					Pernr: oControlModel.getProperty("/Pernr"),
 					CalendarDate: this.getUTCDate(oSelectedDate),
-					StartWorking: timeFormat.format(this.getView().byId("startWorkingTP").getDateValue()),
-					EndWorking: timeFormat.format(this.getView().byId("endWorkingTP").getDateValue()),
-					WorkingBreak: this.getView().byId("checkBreak").getSelected()
+					StartTime: timeFormat.format(this.getView().byId("startWorkingTP").getDateValue()),
+					EndTime: timeFormat.format(this.getView().byId("endWorkingTP").getDateValue()),
+					WorkingHours: this.getView().byId("workingHrsInput").getValue(),
+					BreakFlag: this.getView().byId("checkBreak").getSelected()
 				};
 
 				this.getView().setBusy(true);
-
+				sap.ui.getCore().getMessageManager().removeAllMessages();
 				oModel.create("/EventSet", oEntry, {
 					success: function (data, response) {
 						this.getView().setBusy(false);
@@ -454,7 +560,11 @@ sap.ui.define([
 			this.adjustBreak();
 			oControlModel.setProperty("/isDisplayMode", true);
 		},
-
+		
+		onMessagesClose: function () {
+			sap.ui.getCore().getMessageManager().removeAllMessages();
+		},
+		
 		onPressCancel: function (oEvent) {
 			var oCalendar = this.getView().byId("timeCalendar"),
 				oSelectedDate = oCalendar.getSelectedDates()[0],
@@ -467,7 +577,7 @@ sap.ui.define([
 			oControlModel.setProperty("/isDisplayMode", true);
 			oControlModel.setProperty("/isEditMode", false);
 		},
-		
+
 		openDeleteMessageBox: function (oEvent) {
 			MessageBox.warning(this.getResourceBundle().getText("deleteMessageBoxText"), {
 				actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
@@ -475,8 +585,8 @@ sap.ui.define([
 				onClose: function (sAction) {
 					if (sAction === MessageBox.Action.OK) {
 						this.deleteRecord();
-					}	
-				}
+					}
+				}.bind(this)
 			});
 		}
 	});

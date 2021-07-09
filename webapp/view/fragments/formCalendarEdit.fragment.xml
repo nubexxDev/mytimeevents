@@ -17,6 +17,7 @@
 			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingTP"/>
 			<TimePicker value="{ path: 'EndTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }" id="endWorkingTP"
 				change="onChangeTime" valueFormat="HH:mm" displayFormat="HH:mm" placeholder="HH:mm"/>
+			<CheckBox  select="onEndsDaysAfter" selected="{EndsDayAfter}" text="{i18n>formTextDayAfter}"/>
 			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
 			<Input id="workingHrsInput" enabled="false"/>
 			<Label text="{i18n>formLabelBreak}"/>

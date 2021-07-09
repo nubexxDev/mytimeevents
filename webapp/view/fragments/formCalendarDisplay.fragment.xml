@@ -15,6 +15,7 @@
 			<Text id="startWorkingText"  text="{ path: 'StartTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
 			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingDTI"/>
 			<Text id="endWorkingText" text="{ path: 'EndTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
+			<CheckBox  select="onEndsDaysAfter" selected="{EndsDayAfter}" text="{i18n>formTextDayAfter}" enabled="false"/>
 			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
 			<Text id="workingHrsText" />
 			<Label text="{i18n>formLabelBreak}"/>

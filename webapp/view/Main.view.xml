@@ -15,20 +15,21 @@
 							<Button id="createButton" text="{i18n>buttonCreateText}" tooltip="{i18n>buttonCreateText}" type="Emphasized" press="onPressCreate"
 								visible="{= ${VisibleCreate} === true &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true}"
 								enabled="{= ${EnabledCreate} ? ${EnabledCreate} : false }"/>
-								
 							<!--		<Button text="{i18n>buttonEditText}" tooltip="{i18n>buttonEditText}" press="onPressEdit"
 								visible="{= ${VisibleEdit} ? ${VisibleEdit} : false }" enabled="{ parts: [ { path: 'EnabledEdit'}, { path: 'StartWorking' }, { path: 'EndWorking' } ], formatter : '.validateButton' }"/>
 			-->
 							<Button id="editButton" text="{i18n>buttonEditText}" tooltip="{i18n>buttonEditText}" press="onPressEdit"
-								visible="{= ${VisibleEdit} === true &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true }" enabled="{= ${EnabledEdit} ? ${EnabledEdit} : false }"/>
+								visible="{= ${VisibleEdit} === true &amp;&amp; ${controlModel>/isDisplayMode} === true &amp;&amp; ${controlModel>/isDateSelected} === true }"
+								enabled="{= ${EnabledEdit} ? ${EnabledEdit} : false }"/>
 							<Button id="deleteButton" text="{i18n>buttonDeleteText}" tooltip="{i18n>buttonDeleteText}" press="onPressDelete"
-								visible="{= ${VisibleDelete} === true &amp;&amp; ${controlModel>/isDateSelected} === true }" enabled="{= ${EnabledDelete} ? ${EnabledDelete} : false }"/>
+								visible="{= ${VisibleDelete} === true &amp;&amp; ${controlModel>/isDateSelected} === true }"
+								enabled="{= ${EnabledDelete} ? ${EnabledDelete} : false }"/>
 						</headerContent>
 						<content>
 							<l:VerticalLayout width="100%" class="gridWrapper">
 								<l:Grid containerQuery="true" defaultSpan="XL4 L6 M8">
 									<VBox>
-										<u:Calendar id="timeCalendar" width="80%" firstDayOfWeek="1" nonWorkingDays="{control>/NonWorkingDays}" select="onSelectDay"
+										<u:Calendar id="timeCalendar" width="80%" firstDayOfWeek="1" nonWorkingDays="{controlModel>/NonWorkingDays}" select="onSelectDay"
 											startDateChange="onChangeMonth" legend="calendarLegend"/>
 										<VBox width="80%">
 											<u:CalendarLegend id="calendarLegend">
@@ -47,12 +48,20 @@
 							</l:VerticalLayout>
 						</content>
 						<footer>
-							<OverflowToolbar id="footerActionButtons" visible="{= !${controlModel>/isDisplayMode}}">
+							<OverflowToolbar id="footerActionButtons">
+				<Button id="btnOpenMessagePopOver" icon="sap-icon://message-popup" enabled="{= ${messages>/}.length > 0}"
+					text="{= ${messages>/}.length > 0 ? ${messages>/}.length : null } " type="{= ${messages>/}.length > 0 ? 'Emphasized' : 'Default' }"
+					press="onOpenMessagePopover"/>
+								<!--<Button icon="{ path: '/', formatter: '.buttonIconFormatter' }"-->
+								<!--	type="{ path: '/', formatter: '.buttonTypeFormatter' }"-->
+								<!--	text="{path: '/', formatter: '.highestSeverityMessages' }"-->
+								<!--	press=".handleMessagePopoverPress"/>-->
+							
 								<ToolbarSpacer/>
-								<Button type="Accept" text="{i18n>buttonSaveText}" press="onPressSave">
+								<Button type="Accept" text="{i18n>buttonSaveText}" press="onPressSave" visible="{= !${controlModel>/isDisplayMode}}">
 									<layoutData><OverflowToolbarLayoutData priority="NeverOverflow"/></layoutData>
 								</Button>
-								<Button type="Reject" text="{i18n>buttonCancelText}" press="onPressCancel">
+								<Button type="Reject" text="{i18n>buttonCancelText}" press="onPressCancel" visible="{= !${controlModel>/isDisplayMode}}">
 									<layoutData><OverflowToolbarLayoutData priority="NeverOverflow"/></layoutData>
 								</Button>
 							</OverflowToolbar>
