@@ -49,9 +49,9 @@
 						</content>
 						<footer>
 							<OverflowToolbar id="footerActionButtons">
-				<Button id="btnOpenMessagePopOver" icon="sap-icon://message-popup" enabled="{= ${messages>/}.length > 0}"
-					text="{= ${messages>/}.length > 0 ? ${messages>/}.length : null } " type="{= ${messages>/}.length > 0 ? 'Emphasized' : 'Default' }"
-					press="onOpenMessagePopover"/>
+								<Button id="btnOpenMessagePopOver" icon="sap-icon://message-popup" enabled="{= ${messages>/}.length > 0}"
+									text="{= ${messages>/}.length > 0 ? ${messages>/}.length : null } " type="{= ${messages>/}.length > 0 ? 'Emphasized' : 'Default' }"
+									press="onOpenMessagePopover"/>
 								<!--<Button icon="{ path: '/', formatter: '.buttonIconFormatter' }"-->
 								<!--	type="{ path: '/', formatter: '.buttonTypeFormatter' }"-->
 								<!--	text="{path: '/', formatter: '.highestSeverityMessages' }"-->

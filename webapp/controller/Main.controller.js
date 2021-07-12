@@ -40,9 +40,9 @@ sap.ui.define([
 			});
 
 			this.getCalendar(true);
-			
+
 			this._MessageManager = Core.getMessageManager();
-			
+
 			this._oMessagePopover = sap.ui.xmlfragment("hr.computacenter.mytimeevents.view.fragments.messageDialog", this);
 			this.getView().addDependent(this._oMessagePopover);
 		},
@@ -57,18 +57,18 @@ sap.ui.define([
 			var aMessages = this._MessageManager.getMessageModel().oData;
 			aMessages.forEach(function (sMessage) {
 				switch (sMessage.type) {
-					case "Error":
-						sHighestSeverity = "Negative";
-						break;
-					case "Warning":
-						sHighestSeverity = sHighestSeverity !== "Negative" ? "Critical" : sHighestSeverity;
-						break;
-					case "Success":
-						sHighestSeverity = sHighestSeverity !== "Negative" && sHighestSeverity !== "Critical" ?  "Success" : sHighestSeverity;
-						break;
-					default:
-						sHighestSeverity = !sHighestSeverity ? "Neutral" : sHighestSeverity;
-						break;
+				case "Error":
+					sHighestSeverity = "Negative";
+					break;
+				case "Warning":
+					sHighestSeverity = sHighestSeverity !== "Negative" ? "Critical" : sHighestSeverity;
+					break;
+				case "Success":
+					sHighestSeverity = sHighestSeverity !== "Negative" && sHighestSeverity !== "Critical" ? "Success" : sHighestSeverity;
+					break;
+				default:
+					sHighestSeverity = !sHighestSeverity ? "Neutral" : sHighestSeverity;
+					break;
 				}
 			});
 
@@ -81,21 +81,21 @@ sap.ui.define([
 			var sHighestSeverityMessageType;
 
 			switch (sHighestSeverityIconType) {
-				case "Negative":
-					sHighestSeverityMessageType = "Error";
-					break;
-				case "Critical":
-					sHighestSeverityMessageType = "Warning";
-					break;
-				case "Success":
-					sHighestSeverityMessageType = "Success";
-					break;
-				default:
-					sHighestSeverityMessageType = !sHighestSeverityMessageType ? "Information" : sHighestSeverityMessageType;
-					break;
+			case "Negative":
+				sHighestSeverityMessageType = "Error";
+				break;
+			case "Critical":
+				sHighestSeverityMessageType = "Warning";
+				break;
+			case "Success":
+				sHighestSeverityMessageType = "Success";
+				break;
+			default:
+				sHighestSeverityMessageType = !sHighestSeverityMessageType ? "Information" : sHighestSeverityMessageType;
+				break;
 			}
 
-			return this._MessageManager.getMessageModel().oData.reduce(function(iNumberOfMessages, oMessageItem) {
+			return this._MessageManager.getMessageModel().oData.reduce(function (iNumberOfMessages, oMessageItem) {
 				return oMessageItem.type === sHighestSeverityMessageType ? ++iNumberOfMessages : iNumberOfMessages;
 			}, 0) || "";
 		},
@@ -107,18 +107,18 @@ sap.ui.define([
 
 			aMessages.forEach(function (sMessage) {
 				switch (sMessage.type) {
-					case "Error":
-						sIcon = "sap-icon://message-error";
-						break;
-					case "Warning":
-						sIcon = sIcon !== "sap-icon://message-error" ? "sap-icon://message-warning" : sIcon;
-						break;
-					case "Success":
-						sIcon = "sap-icon://message-error" && sIcon !== "sap-icon://message-warning" ? "sap-icon://message-success" : sIcon;
-						break;
-					default:
-						sIcon = !sIcon ? "sap-icon://message-information" : sIcon;
-						break;
+				case "Error":
+					sIcon = "sap-icon://message-error";
+					break;
+				case "Warning":
+					sIcon = sIcon !== "sap-icon://message-error" ? "sap-icon://message-warning" : sIcon;
+					break;
+				case "Success":
+					sIcon = "sap-icon://message-error" && sIcon !== "sap-icon://message-warning" ? "sap-icon://message-success" : sIcon;
+					break;
+				default:
+					sIcon = !sIcon ? "sap-icon://message-information" : sIcon;
+					break;
 				}
 			});
 
@@ -315,18 +315,37 @@ sap.ui.define([
 			dInitialTime.setHours(aStartTime[0], aStartTime[1], "00");
 			dEndTime.setHours(aEndTime[0], aEndTime[1], "00");
 
-			var iHours = dEndTime.getHours() - dInitialTime.getHours(),
-				iMinutes = dEndTime.getMinutes() - dInitialTime.getMinutes();
+			var oCheckDayAfter = this.byId("checkDayAfter"),
+				iHours,
+				iMinutes;
+
+			if (oCheckDayAfter.getSelected() === true) {
+				iHours = 24 - dInitialTime.getHours() + dEndTime.getHours();
+			} else {
+				iHours = dEndTime.getHours() - dInitialTime.getHours();
+			}
+
+			iMinutes = dEndTime.getMinutes() - dInitialTime.getMinutes();
 
 			if (iHours < 0) return;
 
 			var oCheckBreak = this.byId("checkBreak");
 			if (oCheckBreak.getSelected() === true && iHours > 0) {
-				iHours--;
+				// iHours--;
+				if (iHours >= 8) {
+					iHours--;
+				} else {
+					iHours = iHours - 0.5;
+				}
 			}
 
 			if (iMinutes < 0 && iHours > 0) {
 				iHours--;
+			}
+
+			// Working Hours can't be more than 8 hours
+			if (iHours >= 8) {
+				iHours = 8;
 			}
 
 			var oWorkingHoursTxt = this.byId("workingHrsText"),
@@ -349,12 +368,37 @@ sap.ui.define([
 		},
 
 		validateTimes: function () {
-			var oStartTime = this.byId("startWorkingTP").getDateValue(),
-				oEndTime = this.byId("endWorkingTP").getDateValue();
+			var oStartWorking = this.byId("startWorkingTP"),
+				oEndWorking = this.byId("endWorkingTP"),
+				oStartTime = oStartWorking.getDateValue(),
+				oEndTime = oEndWorking.getDateValue(),
+				oCurrentTime = new Date(),
+				oCheckEndsDayAfter = this.byId("checkDayAfter");
 
-			// if (oStartTime.valueOf() >= oEndTime.valueOf()) {
-			// 	return false;
-			// }
+			if (oStartTime.valueOf() >= oEndTime.valueOf() && oCheckEndsDayAfter.getSelected() === false) {
+				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
+				oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
+				return false;
+			} else {
+				oEndWorking.setValueState(sap.ui.core.ValueState.None);
+			}
+
+			if (oStartTime.getHours() > oCurrentTime.getHours() || (oStartTime.getHours() === oCurrentTime.getHours() && oStartTime.getMinutes() >
+					oCurrentTime.getMinutes())) {
+				oStartWorking.setValueState(sap.ui.core.ValueState.Error);
+				oStartWorking.setValueStateText(this.getResourceBundle().getText("startTimeErrorFuture"));
+				return false;
+			} else {
+				oStartWorking.setValueState(sap.ui.core.ValueState.None);
+			}
+
+			if (oEndTime.getHours() > oCurrentTime.getHours()) {
+				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
+				oEndWorking.setValueStateText(this.getResourceBundle().getText("endTimeErrorFuture"));
+				return false;
+			} else {
+				oEndWorking.setValueState(sap.ui.core.ValueState.None);
+			}
 
 			return true;
 		},
@@ -389,12 +433,13 @@ sap.ui.define([
 			var oStartWorking = this.byId("startWorkingTP"),
 				oEndWorking = this.byId("endWorkingTP");
 
-			if (!this.validateTimes()) {
-				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
-				oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
-			} else {
-				oEndWorking.setValueState(sap.ui.core.ValueState.None);
-			}
+			this.validateTimes();
+			// if (!this.validateTimes()) {
+			// 	oEndWorking.setValueState(sap.ui.core.ValueState.Error);
+			// 	oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
+			// } else {
+			// 	oEndWorking.setValueState(sap.ui.core.ValueState.None);
+			// }
 
 			this.adjustBreak();
 
@@ -426,8 +471,8 @@ sap.ui.define([
 				this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/BreakFlag", oEvent.getSource().getSelected());
 			}
 		},
-		
-		onOpenMessagePopover: function(oEvent) {
+
+		onOpenMessagePopover: function (oEvent) {
 			this._oMessagePopover.openBy(oEvent.getSource());
 		},
 
@@ -545,9 +590,19 @@ sap.ui.define([
 				oModel.create("/EventSet", oEntry, {
 					success: function (data, response) {
 						this.getView().setBusy(false);
-						MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
-						oModel.refresh();
-						this.getCalendar();
+
+						var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
+							if (node.type === 'Error') {
+								return node;
+							}
+						});
+						
+						if (aErrors.length === 0 ) {
+							MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
+							oModel.refresh();
+							this.getCalendar();
+						}
+
 					}.bind(this),
 					error: function (error) {
 						this.getView().setBusy(false);
@@ -560,11 +615,11 @@ sap.ui.define([
 			this.adjustBreak();
 			oControlModel.setProperty("/isDisplayMode", true);
 		},
-		
+
 		onMessagesClose: function () {
 			sap.ui.getCore().getMessageManager().removeAllMessages();
 		},
-		
+
 		onPressCancel: function (oEvent) {
 			var oCalendar = this.getView().byId("timeCalendar"),
 				oSelectedDate = oCalendar.getSelectedDates()[0],
