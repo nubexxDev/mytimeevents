@@ -515,16 +515,25 @@ sap.ui.define([
 
 			oModel.remove(sPath, {
 				success: function (data) {
-					oModel.refresh();
-					this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
-					this.getView().setBusy(false);
-					MessageToast.show(this.getResourceBundle().getText("successDeleteEvent"));
-					this.getCalendar();
-					oControlModel.setProperty("/isDisplayMode", true);
-					oControlModel.setProperty("/isEditMode", false);
+					var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
+						if (node.type === 'Error') {
+							return node;
+						}
+					});
 
-					this.getView().byId("workingHrsInput").setValue(0);
-					this.getView().byId("workingHrsText").setText("0");
+					if (aErrors.length === 0) {
+						oModel.refresh();
+						this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
+						this.getView().setBusy(false);
+						MessageToast.show(this.getResourceBundle().getText("successDeleteEvent"));
+						this.getCalendar();
+						oControlModel.setProperty("/isDisplayMode", true);
+						oControlModel.setProperty("/isEditMode", false);
+
+						this.getView().byId("workingHrsInput").setValue(0);
+						this.getView().byId("workingHrsText").setText("0");
+					}
+					this.getView().setBusy(false);
 				}.bind(this),
 				error: function (error) {
 					this.getView().setBusy(false);
@@ -555,10 +564,19 @@ sap.ui.define([
 					sap.ui.getCore().getMessageManager().removeAllMessages();
 					oModel.submitChanges({
 						success: function (data) {
-							oModel.refresh();
+							var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
+								if (node.type === 'Error') {
+									return node;
+								}
+							});
+
+							if (aErrors.length === 0) {
+								oModel.refresh();
+								this.getView().setBusy(false);
+								MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
+								this.getCalendar();
+							}
 							this.getView().setBusy(false);
-							MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
-							this.getCalendar();
 						}.bind(this),
 						error: function (error) {
 							this.getView().setBusy(false);
@@ -590,19 +608,17 @@ sap.ui.define([
 				oModel.create("/EventSet", oEntry, {
 					success: function (data, response) {
 						this.getView().setBusy(false);
-
 						var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
 							if (node.type === 'Error') {
 								return node;
 							}
 						});
-						
-						if (aErrors.length === 0 ) {
+
+						if (aErrors.length === 0) {
 							MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
 							oModel.refresh();
 							this.getCalendar();
 						}
-
 					}.bind(this),
 					error: function (error) {
 						this.getView().setBusy(false);
