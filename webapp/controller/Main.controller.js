@@ -45,6 +45,8 @@ sap.ui.define([
 
 			this._oMessagePopover = sap.ui.xmlfragment("hr.computacenter.mytimeevents.view.fragments.messageDialog", this);
 			this.getView().addDependent(this._oMessagePopover);
+			
+			this._setSelectedDate();
 		},
 
 		/* =========================================================== */
@@ -134,8 +136,12 @@ sap.ui.define([
 				Pernr: oControlModel.getProperty("/Pernr"),
 				CalendarDate: oUTCCalendarDate
 			});
+			
+			sPath = sPath + "?time='" + new Date().getTime() + "'" ;
 
 			this.resetView();
+			
+			
 
 			this.getView().bindElement({
 				path: sPath,
@@ -147,9 +153,23 @@ sap.ui.define([
 						this.getView().setBusy(true);
 					}.bind(this),
 					dataReceived: function (oData) {
+						this.byId("checkDayAfter").setSelected(oData.getParameters().data.EndTimeNextDayFlag);
+						this.adjustBreak();
 						this.getView().setBusy(false);
 					}.bind(this)
 				}
+			});
+		},
+
+		_setSelectedDate: function () {
+
+			this.getOwnerComponent().getModel().callFunction("/GetSelectionDate", {
+				method: "GET",
+				success: function (oData, response) {
+						var oCalendar = this.byId("timeCalendar");
+						oCalendar.focusDate(oData.CalendarDate);
+				}.bind(this),
+				error: function (oError) {}
 			});
 
 		},
@@ -339,8 +359,9 @@ sap.ui.define([
 				}
 			}
 
-			if (iMinutes < 0 && iHours > 0) {
-				iHours--;
+			if (iHours > 0) {
+				iMinutes /= 60;
+				iHours += iMinutes;
 			}
 
 			// Working Hours can't be more than 8 hours
@@ -373,9 +394,10 @@ sap.ui.define([
 				oStartTime = oStartWorking.getDateValue(),
 				oEndTime = oEndWorking.getDateValue(),
 				oCurrentTime = new Date(),
-				oCheckEndsDayAfter = this.byId("checkDayAfter");
+				oCheckEndsDayAfter = this.byId("checkDayAfter"),
+				oDaySelected = new Date(this.byId("selectedDate").getText());
 
-			if (oStartTime.valueOf() >= oEndTime.valueOf() && oCheckEndsDayAfter.getSelected() === false) {
+			if (oStartTime.valueOf() >= oEndTime.valueOf() && oCheckEndsDayAfter.getSelected() === false && oEndWorking.getValue() !== "00:00") {
 				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
 				oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
 				return false;
@@ -383,8 +405,8 @@ sap.ui.define([
 				oEndWorking.setValueState(sap.ui.core.ValueState.None);
 			}
 
-			if (oStartTime.getHours() > oCurrentTime.getHours() || (oStartTime.getHours() === oCurrentTime.getHours() && oStartTime.getMinutes() >
-					oCurrentTime.getMinutes())) {
+			oDaySelected.setHours(oStartTime.getHours(), oStartTime.getMinutes());
+			if (oDaySelected > oCurrentTime) {
 				oStartWorking.setValueState(sap.ui.core.ValueState.Error);
 				oStartWorking.setValueStateText(this.getResourceBundle().getText("startTimeErrorFuture"));
 				return false;
@@ -392,7 +414,12 @@ sap.ui.define([
 				oStartWorking.setValueState(sap.ui.core.ValueState.None);
 			}
 
-			if (oEndTime.getHours() > oCurrentTime.getHours()) {
+			if (this.byId("checkDayAfter").getSelected() === true) {
+				oDaySelected.setDate(oDaySelected.getDate() + 1);
+			}
+			oDaySelected.setHours(oEndTime.getHours(), oEndTime.getMinutes());
+
+			if (oDaySelected > oCurrentTime) {
 				oEndWorking.setValueState(sap.ui.core.ValueState.Error);
 				oEndWorking.setValueStateText(this.getResourceBundle().getText("endTimeErrorFuture"));
 				return false;
@@ -422,7 +449,6 @@ sap.ui.define([
 				oControlModel.setProperty("/isDateSelected", true);
 				this.oLastSelectedJSDate = oStartDate;
 				this.bindView(oStartDate);
-
 			}
 			oControlModel.setProperty("/isDisplayMode", true);
 
@@ -434,13 +460,6 @@ sap.ui.define([
 				oEndWorking = this.byId("endWorkingTP");
 
 			this.validateTimes();
-			// if (!this.validateTimes()) {
-			// 	oEndWorking.setValueState(sap.ui.core.ValueState.Error);
-			// 	oEndWorking.setValueStateText(this.getResourceBundle().getText("timeErrorState"));
-			// } else {
-			// 	oEndWorking.setValueState(sap.ui.core.ValueState.None);
-			// }
-
 			this.adjustBreak();
 
 			if (this.getView().getBindingContext()) {
@@ -515,25 +534,16 @@ sap.ui.define([
 
 			oModel.remove(sPath, {
 				success: function (data) {
-					var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
-						if (node.type === 'Error') {
-							return node;
-						}
-					});
-
-					if (aErrors.length === 0) {
-						oModel.refresh();
-						this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
-						this.getView().setBusy(false);
-						MessageToast.show(this.getResourceBundle().getText("successDeleteEvent"));
-						this.getCalendar();
-						oControlModel.setProperty("/isDisplayMode", true);
-						oControlModel.setProperty("/isEditMode", false);
-
-						this.getView().byId("workingHrsInput").setValue(0);
-						this.getView().byId("workingHrsText").setText("0");
-					}
+					oModel.refresh();
+					this.byId("endWorkingTP").setValueState(sap.ui.core.ValueState.None);
 					this.getView().setBusy(false);
+					MessageToast.show(this.getResourceBundle().getText("successDeleteEvent"));
+					this.getCalendar();
+					oControlModel.setProperty("/isDisplayMode", true);
+					oControlModel.setProperty("/isEditMode", false);
+
+					this.getView().byId("workingHrsInput").setValue(0);
+					this.getView().byId("workingHrsText").setText("0");
 				}.bind(this),
 				error: function (error) {
 					this.getView().setBusy(false);
@@ -564,19 +574,10 @@ sap.ui.define([
 					sap.ui.getCore().getMessageManager().removeAllMessages();
 					oModel.submitChanges({
 						success: function (data) {
-							var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
-								if (node.type === 'Error') {
-									return node;
-								}
-							});
-
-							if (aErrors.length === 0) {
-								oModel.refresh();
-								this.getView().setBusy(false);
-								MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
-								this.getCalendar();
-							}
+							oModel.refresh();
 							this.getView().setBusy(false);
+							MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
+							this.getCalendar();
 						}.bind(this),
 						error: function (error) {
 							this.getView().setBusy(false);
@@ -599,6 +600,7 @@ sap.ui.define([
 					CalendarDate: this.getUTCDate(oSelectedDate),
 					StartTime: timeFormat.format(this.getView().byId("startWorkingTP").getDateValue()),
 					EndTime: timeFormat.format(this.getView().byId("endWorkingTP").getDateValue()),
+					EndTimeNextDayFlag: this.getView().byId("checkDayAfter").getSelected(),
 					WorkingHours: this.getView().byId("workingHrsInput").getValue(),
 					BreakFlag: this.getView().byId("checkBreak").getSelected()
 				};
@@ -608,17 +610,9 @@ sap.ui.define([
 				oModel.create("/EventSet", oEntry, {
 					success: function (data, response) {
 						this.getView().setBusy(false);
-						var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
-							if (node.type === 'Error') {
-								return node;
-							}
-						});
-
-						if (aErrors.length === 0) {
-							MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
-							oModel.refresh();
-							this.getCalendar();
-						}
+						MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
+						oModel.refresh();
+						this.getCalendar();
 					}.bind(this),
 					error: function (error) {
 						this.getView().setBusy(false);
@@ -659,6 +653,10 @@ sap.ui.define([
 					}
 				}.bind(this)
 			});
+		},
+
+		onEndsDaysAfter: function (oEvent) {
+			this.onChangeTime();
 		}
 	});
 });

@@ -12,12 +12,12 @@
 			<Label text="{i18n>formLabelDate}" labelFor="selectedDate"/>
 			<Text id="selectedDateDisplay" text="{i18n>noDateSelected}"/>
 			<Label text="{i18n>formLabelStartTime}" labelFor="startWorkingDTI"/>
-			<Text id="startWorkingText"  text="{ path: 'StartTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
+			<Text id="startWorkingText" text="{ path: 'StartTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
 			<Label text="{i18n>formLabelEndTime}" labelFor="endWorkingDTI"/>
 			<Text id="endWorkingText" text="{ path: 'EndTime', type: 'sap.ui.model.odata.type.Time', formatOptions: { format: 'Hm'} }"/>
-			<CheckBox id="checkDayAfterDisplay" select="onEndsDaysAfter" selected="{EndsDayAfter}" text="{i18n>formTextDayAfter}" enabled="false"/>
+			<CheckBox id="checkDayAfterDisplay" select="onEndsDaysAfter" selected="{EndTimeNextDayFlag}" text="{i18n>formTextDayAfter}" enabled="false"/>
 			<Label text="{i18n>formLabelWorkingHours}" labelFor="workingHrsInput"/>
-			<Text id="workingHrsText" />
+			<Text id="workingHrsText" text="{ path: WorkingHours, type : sap.ui.model.type.Float, formatOptions: { minFractionDigits: 0, maxFractionDigits: 1} }" />
 			<Label text="{i18n>formLabelBreak}"/>
 			<CheckBox id="checkBreakDisplay" select="onChangeBreak" selected="{BreakFlag}" text="{i18n>formTextBreak}" enabled="false"/>
 		</form:content>
