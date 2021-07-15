@@ -615,18 +615,25 @@ sap.ui.define([
 				this.getView().setBusy(true);
 				sap.ui.getCore().getMessageManager().removeAllMessages();
 				oModel.create("/EventSet", oEntry, {
-					this.getView().setBusy(false);
-					var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
-						if (node.type === 'Error') {
-							return node;
+					success: function (data, response) {
+						this.getView().setBusy(false);
+						var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
+							if (node.type === 'Error') {
+								return node;
+							}
+						});
+						
+						if (aErrors.length === 0 ) {
+							MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
+							oModel.refresh();
+							this.getCalendar();
 						}
-					});
 
-					if (aErrors.length === 0) {
-						MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
-						oModel.refresh();
-						this.getCalendar();
-					}
+					}.bind(this),
+					error: function (error) {
+						this.getView().setBusy(false);
+						MessageToast.show(this.getResourceBundle().getText("errorCreateEvent"));
+					}.bind(this)
 				});
 			}
 
