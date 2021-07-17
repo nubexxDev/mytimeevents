@@ -581,10 +581,19 @@ sap.ui.define([
 					sap.ui.getCore().getMessageManager().removeAllMessages();
 					oModel.submitChanges({
 						success: function (data) {
-							oModel.refresh();
+							var aErrors = $.grep(this._MessageManager.getMessageModel().oData, function (node) {
+								if (node.type === 'Error') {
+									return node;
+								}
+							});
+
+							if (aErrors.length === 0) {
+								oModel.refresh();
+								this.getView().setBusy(false);
+								MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
+								this.getCalendar();
+							}
 							this.getView().setBusy(false);
-							MessageToast.show(this.getResourceBundle().getText("successUpdateEvent"));
-							this.getCalendar();
 						}.bind(this),
 						error: function (error) {
 							this.getView().setBusy(false);
@@ -622,8 +631,8 @@ sap.ui.define([
 								return node;
 							}
 						});
-						
-						if (aErrors.length === 0 ) {
+
+						if (aErrors.length === 0) {
 							MessageToast.show(this.getResourceBundle().getText("successCreateEvent"));
 							oModel.refresh();
 							this.getCalendar();
@@ -672,6 +681,7 @@ sap.ui.define([
 		},
 
 		onEndsDaysAfter: function (oEvent) {
+			this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndTimeNextDayFlag", this.getView().byId("checkDayAfter").getSelected());
 			this.onChangeTime();
 		}
 	});
