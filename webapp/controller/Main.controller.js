@@ -165,7 +165,9 @@ sap.ui.define([
 				method: "GET",
 				success: function (oData, response) {
 					var oCalendar = this.byId("timeCalendar");
-					oCalendar.focusDate(oData.CalendarDate);
+					oCalendar.destroySelectedDates();
+					var oDateRange = new sap.ui.unified.DateRange({startDate: oData.CalendarDate});
+					oCalendar.addSelectedDate(oDateRange);
 				}.bind(this),
 				error: function (oError) {}
 			});
