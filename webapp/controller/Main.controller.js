@@ -166,7 +166,9 @@ sap.ui.define([
 				success: function (oData, response) {
 					var oCalendar = this.byId("timeCalendar");
 					oCalendar.destroySelectedDates();
-					var oDateRange = new sap.ui.unified.DateRange({startDate: oData.CalendarDate});
+					var oDateRange = new sap.ui.unified.DateRange({
+						startDate: oData.CalendarDate
+					});
 					oCalendar.addSelectedDate(oDateRange);
 				}.bind(this),
 				error: function (oError) {}
@@ -281,6 +283,17 @@ sap.ui.define([
 
 			if (oSelectedDay) {
 				oText.setText(this.oFormatYyyymmdd.format(oSelectedDay.getStartDate()));
+
+				for (var i = 0; i < this.getView().getModel("CalendarModel").oData.length; i++) {
+					// look for the entry with a matching `code` value
+					if (this.oFormatYyyymmdd.format(this.getView().getModel("CalendarModel").oData[i].CalendarDate) == this.oFormatYyyymmdd.format(
+							oSelectedDay.getStartDate())) {
+						var sHolidayText = this.getView().getModel("CalendarModel").oData[i].HolidayText;
+					}
+				}
+				if (sHolidayText) {
+					oText.setText(oText.getText() + " | " + sHolidayText);
+				}
 				return;
 			}
 			oText.setText(this.getResourceBundle().getText("noDateSelected"));
@@ -683,7 +696,8 @@ sap.ui.define([
 		},
 
 		onEndsDaysAfter: function (oEvent) {
-			this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndTimeNextDayFlag", this.getView().byId("checkDayAfter").getSelected());
+			this.getView().getModel().setProperty(this.getView().getBindingContext().getPath() + "/EndTimeNextDayFlag", this.getView().byId(
+				"checkDayAfter").getSelected());
 			this.onChangeTime();
 		}
 	});
